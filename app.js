@@ -11,8 +11,14 @@ var express = require('express');
 var app = express();
 var mqtt = require('mqtt');
 var client = mqtt.connect('mqtt://127.0.0.1:1883');
+client.subscribe('MODULE/#');
 client.on('connect', function () {
     console.log("MQTT connecté !");
+});
+client.publish('MODULE/1', 'off');
+client.on('message', function (topic, message) {
+  console.log(topic.toString());
+  console.log(message.toString());
 });
 
 var m1, m2, m3, m4, m5, m6 = false;
