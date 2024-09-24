@@ -9,6 +9,12 @@
 
 var express = require('express');
 var app = express();
+var mqtt = require('mqtt');
+var client = mqtt.connect('mqtt://127.0.0.1:1883');
+client.on('connect', function () {
+    console.log("MQTT connecté !");
+});
+
 var m1, m2, m3, m4, m5, m6 = false;
 var idString;
 app.get('/', function (req, res) {
