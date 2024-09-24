@@ -7,6 +7,8 @@
  */
 
 
+const { every } = require('async');
+const e = require('express');
 var express = require('express');
 var app = express();
 var mqtt = require('mqtt');
@@ -17,11 +19,30 @@ client.on('connect', function () {
 });
 client.publish('MODULE/1', 'off');
 client.on('message', function (topic, message) {
-  console.log(topic.toString());
-  console.log(message.toString());
+    if (topic.indexOf("MODULE") !== -1)
+    {
+        var numModule = parseInt(topic.split("/").pop()); 
+        if (numModule >= 1 && numModule <= 6) {
+            if (message.toString() === 'on') {
+                m[numModule - 1] = true;
+            } else if (message.toString() === 'off') {
+                m[numModule - 1] = false;
+            }
+        } else if (numModule === 0) {
+            
+            if (message.toString() === 'on') {
+                m.forEach(function (element, index) {
+                m[index] = true;
+                });
+            } else if (message.toString() === 'off') {
+                m.forEach(function (element, index) {
+                m[index] = false;
+                });
+            }
+        }
+    }
 });
-
-var m1, m2, m3, m4, m5, m6 = false;
+const m = [0,0,0,0,0,0];
 var idString;
 app.get('/', function (req, res) {
     res.render('index.ejs');
@@ -96,40 +117,27 @@ app.get('/contact', function (req, res) {
 app.get('/module/:id', function (req, res) {
     switch (req.params.id) {
         case '1':
-            m1 = !m1;
-            idString = m1 ? 'on' : 'off';
-            break;
         case '2':
-            m2 = !m2;
-            idString = m2 ? 'on' : 'off';
-            break;
         case '3':
-            m3 = !m3;
-            idString = m3 ? 'on' : 'off';
-            break;
         case '4':
-            m4 = !m4;
-            idString = m4 ? 'on' : 'off';
-            break;
         case '5':
-            m5 = !m5;
-            idString = m5 ? 'on' : 'off';
-            break;
         case '6':
-            m6 = !m6;
-            idString = m6 ? 'on' : 'off';
+            var modId = parseInt(req.params.id);
+            m[modId-1] = !m[modId-1];
+            idString = m[modId-1] ? 'on' : 'off';
             break;
+        
         case 'reset':
-            m1 = m2 = m3 = m4 = m5 = m6 = false;
+            m.forEach(function(element, index) {
+                m[index] = false;
+            });
             idString = 'reset';
             break;
         case 'controle':
-            idString = '1=' + (m1 ? 'on' : 'off') + '   '
-                + '2=' + (m2 ? 'on' : 'off') + '   '
-                + '3=' + (m3 ? 'on' : 'off') + '   '
-                + '4=' + (m4 ? 'on' : 'off') + '   '
-                + '5=' + (m5 ? 'on' : 'off') + '   '
-                + '6=' + (m6 ? 'on' : 'off');
+            idString = "";
+            m.forEach(function (element, index) {
+                idString += (index + 1) + '=' + (element ? 'on' : 'off') + '   ';
+            });
             break;
         default:
             idString = 'inconnu';
